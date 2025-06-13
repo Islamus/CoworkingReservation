@@ -12,6 +12,22 @@ class WorkSpace {
         this.available = available;
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public boolean isAvailable() {
+        return available;
+    }
+
     public String toFileString() {
         return "ID: " + id + ", " + "Type: " + type + ", " + "Price: "+ price + ", " + "Status: " + available;
     }
