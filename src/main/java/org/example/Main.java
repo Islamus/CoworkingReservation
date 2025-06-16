@@ -119,15 +119,16 @@ public class Main {
         List<String> lines = FileReaderHelper.readLines(WORKSPACES_FILE);
         List<String> updated = new ArrayList<>();
 
-        for (String line : lines) {
-            if (!line.startsWith(id + ",")) {
-                updated.add(line);
-            }
+            Optional<String> optionLine = lines.stream()
+                    .filter(line -> {
+                        WorkSpace ws = WorkSpace.fromFileString(line);
+                        return ws.getId().equals(id);
+                    })
+                    .findFirst();
 
-            if(!id.equals(line)){
-                throw new MyCustomExpe("Such ID does not exist");
+            if (optionLine.isEmpty()) {
+                throw new MyCustomExpe("Such ID does not exist: " + id);
             }
-        }
 
 
 
