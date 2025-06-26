@@ -179,12 +179,10 @@ public class Main {
     }
 
     static void viewUserReservations(String name) {
-        List<String> lines = FileReaderHelper.readLines(RESERVATIONS_FILE);
-        for (String line : lines) {
-            if (line.contains("," + name + ",")) {
-                System.out.println(line);
-            }
-        }
+        FileReaderHelper.readLines(RESERVATIONS_FILE).stream()
+                .filter(line -> line.contains("," + name + ","))
+                .forEach(System.out::println);
+
     }
 
     static void cancelReservation(String name) {
