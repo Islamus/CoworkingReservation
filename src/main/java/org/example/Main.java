@@ -152,8 +152,7 @@ public class Main {
             System.out.print("Enter price: ");
             double price = Double.parseDouble(scanner.nextLine());
 
-            WorkSpace ws = new WorkSpace(type, price, true);
-
+            WorkSpace ws = new WorkSpace(type, price,
             workspaceDAO.create(ws);
 
             System.out.println("Workspace added with ID: " + ws.getId());
