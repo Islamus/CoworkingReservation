@@ -11,8 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main {
-    static final String WORKSPACES_FILE = "C:/Users/Islam/Desktop/workspaces.txt";
-    static final String RESERVATIONS_FILE = "reservations.txt";
+
     static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) throws MyCustomExpe, SQLException {
@@ -56,7 +55,9 @@ public class Main {
                     addWorkspace();
                     break;
                 case "2":
-                    removeWorkspaceReservation();
+                    System.out.print("Enter workspace ID to cancel: ");
+                    String id = scanner.nextLine().trim();
+                    cancelWorkSpaceReservation(id);
                     break;
                 case "3":
                     viewAllWorkSpaces();
@@ -123,43 +124,6 @@ public class Main {
     }
 
 
-    static void removeWorkspaceReservation() throws MyCustomExpe {
-        System.out.print("Enter workspace ID to remove: ");
-            String id = scanner.nextLine().trim();
-            List<String> lines = FileReaderHelper.readLines(WORKSPACES_FILE);
-
-
-        List<String> updated = lines.stream()
-                .filter(line -> {
-                    WorkSpace ws = WorkSpace.fromFileString(line);
-                    return !ws.getId().equals(id);
-                })
-                .collect(Collectors.toList());
-
-
-        for (String line : lines) {
-            if (!line.startsWith(id + ",")) {
-                updated.add(line);
-            }
-
-            if(!id.equals(line)){
-                throw new MyCustomExpe("Such ID does not exist");
-            }
-        }
-
-
-
-            FileReaderHelper.writeLines(WORKSPACES_FILE, updated);
-            System.out.println("Workspace removed successfully.");
-        }
-
-    static void viewAllReservations() {
-        List<String> lines = FileReaderHelper.readLines(RESERVATIONS_FILE);
-        for (String line : lines) {
-            System.out.println(line);
-        }
-    }
-
     static void viewAllWorkSpaces() {
         WorkspaceDAO dao = new WorkspaceDAO();
         try {
@@ -176,17 +140,6 @@ public class Main {
         }
     }
 
-
-    // Customer: Browse available spaces
-    static void browseSpaces() {
-        List<String> lines = FileReaderHelper.readLines(WORKSPACES_FILE);
-        for (String line : lines) {
-            WorkSpace ws = WorkSpace.fromFileString(line);
-            if (ws.available){
-                System.out.println(line);
-            }
-        }
-    }
 
 
 
@@ -240,6 +193,23 @@ public class Main {
 
             if (deleted > 0) {
                 System.out.println("All your " + deleted + " reservations have been canceled.");
+            } else {
+                System.out.println("You had no reservations to cancel.");
+            }
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+
+    static void cancelWorkSpaceReservation(String id) {
+
+
+        try {
+            WorkspaceDAO dao = new WorkspaceDAO();
+            int deleted = dao.cancelWorkspaces(id);
+
+            if (deleted > 0) {
+                System.out.println("Reservations have been canceled.");
             } else {
                 System.out.println("You had no reservations to cancel.");
             }

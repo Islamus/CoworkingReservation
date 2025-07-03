@@ -38,4 +38,17 @@ public class WorkspaceDAO {
         }
         return list;
     }
+
+    public int cancelWorkspaces(String id) throws SQLException {
+        String sql = "DELETE FROM workspaces WHERE id = ?";
+
+
+        try (PreparedStatement stmt = DBConnection.getConnection().prepareStatement(sql)){
+            stmt.setString(1, id);
+            return stmt.executeUpdate();
+
+        }
+
+    }
 }
+
