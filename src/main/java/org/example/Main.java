@@ -1,46 +1,71 @@
 package org.example;
 
-import org.example.coworking.DBConnection;
-import org.example.dao.ReservationDAO;
-import org.example.dao.WorkspaceDAO;
-import org.example.expections.MyCustomExpe;
+import org.example.dao.BookingDAO;
+import org.example.dao.UserDAO;
+import org.example.dao.WorkSpaceDAO;
+import org.example.entities.Booking;
+import org.example.entities.User;
+import org.example.entities.WorkSpace;
 
-import java.io.*;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.stream.Collectors;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Scanner;
 
 public class Main {
 
     static Scanner scanner = new Scanner(System.in);
+    static EntityManagerFactory emf;
+    static EntityManager em;
 
-    public static void main(String[] args) throws MyCustomExpe, SQLException {
-        DBConnection.getConnection();
+    static UserDAO userDAO;
+    static WorkSpaceDAO workspaceDAO;
+    static BookingDAO bookingDAO;
+
+    public static void main(String[] args) {
+        emf = Persistence.createEntityManagerFactory("bookingPU");
+        em = emf.createEntityManager();
+
+        userDAO = new UserDAO(em);
+        workspaceDAO = new WorkSpaceDAO(em);
+        bookingDAO = new BookingDAO(em);
+
+        System.out.println("=== Welcome to Booking System ===");
+
+        mainMenu();
+
+        close();
+    }
+
+    static void mainMenu() {
         while (true) {
-            System.out.println("\n=== Reservation System ===");
+            System.out.println("\n--- Main Menu ---");
             System.out.println("1. Admin Login");
-            System.out.println("2. Customer Login");
+            System.out.println("2. Customer");
             System.out.println("3. Exit");
             System.out.print("Select option: ");
-            String choice = scanner.nextLine();
+            String option = scanner.nextLine();
 
-            switch (choice) {
+            switch (option) {
                 case "1":
                     adminMenu();
                     break;
                 case "2":
-                    customerMenu();
+                    customerFlow();
                     break;
                 case "3":
-                    System.out.println("Exiting...");
                     return;
                 default:
-                    System.out.println("Invalid option.");
+                    System.out.println("Invalid option. Try again.");
             }
         }
     }
 
-    static void adminMenu() throws MyCustomExpe {
+    static void adminMenu() {
         while (true) {
             System.out.println("\n--- Admin Menu ---");
             System.out.println("1. Add a new coworking space");
@@ -55,12 +80,10 @@ public class Main {
                     addWorkspace();
                     break;
                 case "2":
-                    System.out.print("Enter workspace ID to cancel: ");
-                    String id = scanner.nextLine().trim();
-                    cancelWorkSpaceReservation(id);
+                    removeWorkspace();
                     break;
                 case "3":
-                    viewAllWorkSpaces();
+                    listAvailableWorkspaces();
                     break;
                 case "4":
                     return;
@@ -70,10 +93,27 @@ public class Main {
         }
     }
 
-    static void customerMenu() {
+    static void customerFlow() {
         System.out.print("Enter your name: ");
         String name = scanner.nextLine();
 
+        System.out.print("Enter your email: ");
+        String email = scanner.nextLine();
+
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        user.setRole("customer");
+
+
+        userDAO.create(user);
+
+        System.out.println("Welcome, " + name + "!");
+        customerMenu(user);
+
+    }
+
+    static void customerMenu(User user) {
         while (true) {
             System.out.println("\n--- Customer Menu ---");
             System.out.println("1. Browse available spaces");
@@ -86,16 +126,16 @@ public class Main {
 
             switch (choice) {
                 case "1":
-                    viewAllWorkSpaces();
+                    listAvailableWorkspaces();
                     break;
                 case "2":
-                    makeReservation(name);
+                    makeBooking(user);
                     break;
                 case "3":
-                    viewUserReservations(name);
+                    viewMyBookings(user);
                     break;
                 case "4":
-                    cancelReservation(name);
+                    cancelBooking(user);
                     break;
                 case "5":
                     return;
@@ -107,114 +147,146 @@ public class Main {
 
     static void addWorkspace() {
         try {
-            System.out.print("Enter workspace ID: ");
-            String id = scanner.nextLine();
-            System.out.print("Enter type (Private, Open): ");
+            System.out.print("Enter workspace type (e.g. desk, meeting_room): ");
             String type = scanner.nextLine();
             System.out.print("Enter price: ");
             double price = Double.parseDouble(scanner.nextLine());
 
-            WorkSpace ws = new WorkSpace(id, type, price, true);
-            WorkspaceDAO dao = new WorkspaceDAO();
-            dao.insertWorkspace(ws);
-            System.out.println("Workspace added to database.");
+            WorkSpace ws = new WorkSpace(type, price, true);
+
+            workspaceDAO.create(ws);
+
+            System.out.println("Workspace added with ID: " + ws.getId());
         } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             System.out.println("Error adding workspace: " + e.getMessage());
         }
     }
 
-
-    static void viewAllWorkSpaces() {
-        WorkspaceDAO dao = new WorkspaceDAO();
+    static void removeWorkspace() {
         try {
-            List<WorkSpace> list = dao.getAvailableWorkspaces();
-            if (list.isEmpty()) {
-                System.out.println("No available workspaces found.");
-            } else {
-                for (WorkSpace ws : list) {
-                    System.out.println(ws.toFileString());
-                }
+            System.out.print("Enter workspace ID to remove: ");
+            Long id = Long.parseLong(scanner.nextLine());
+
+            WorkSpace ws = workspaceDAO.findById(id);
+            if (ws == null) {
+                System.out.println("Workspace not found.");
+                return;
             }
+
+            em.getTransaction().begin();
+            workspaceDAO.delete(ws);
+            em.getTransaction().commit();
+
+            System.out.println("Workspace removed.");
         } catch (Exception e) {
-            System.out.println("Error reading workspaces: " + e.getMessage());
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            System.out.println("Error removing workspace: " + e.getMessage());
         }
     }
 
-
-
-
-    static void makeReservation(String name) {
-        try {
-            System.out.print("Enter workspace ID: ");
-            String wid = scanner.nextLine();
-            System.out.print("Enter date YYYY-MM-DD: ");
-            String date = scanner.nextLine();
-            System.out.print("Start time HH:MM: ");
-            String start = scanner.nextLine();
-            System.out.print("End time HH:MM: ");
-            String end = scanner.nextLine();
-
-            String id = "R" + new Random().nextInt(10000);
-            Reservation r = new Reservation(id, name, wid, date, start, end);
-            ReservationDAO dao = new ReservationDAO();
-            dao.insertReservation(r);
-
-            System.out.println("Reservation successful for workspace " + wid + " on " + date + ".");
-        } catch (Exception e) {
-            e.printStackTrace();
+    static void listAllWorkspaces() {
+        List<WorkSpace> list = workspaceDAO.findAll();
+        if (list.isEmpty()) {
+            System.out.println("No workspaces found.");
+        } else {
+            for (WorkSpace ws : list) {
+                System.out.printf("ID: %d, Type: %s, Price: %.2f, Available: %b%n",
+                        ws.getId(), ws.getType(), ws.getPrice(), ws.isAvailable());
+            }
         }
     }
 
-
-
-
-    static void viewUserReservations(String name) {
-        try {
-            ReservationDAO dao = new ReservationDAO();
-            List<Reservation> reservations = dao.getUserReservations(name);
-
-            if (reservations.isEmpty()) {
-                System.out.println("No reservations found for " + name);
-            } else {
-                for (Reservation r : reservations) {
-                    System.out.println(r);
-                }
+    static void listAvailableWorkspaces() {
+        List<WorkSpace> list = workspaceDAO.findAvailable();
+        if (list.isEmpty()) {
+            System.out.println("No available workspaces.");
+        } else {
+            for (WorkSpace ws : list) {
+                System.out.printf("ID: %d, Type: %s, Price: %.2f%n", ws.getId(), ws.getType(), ws.getPrice());
             }
-        } catch (Exception e) {
-            System.out.println("Error retrieving reservations: " + e.getMessage());
         }
     }
 
-
-    static void cancelReservation(String name) {
+    static void makeBooking(User user) {
         try {
-            ReservationDAO dao = new ReservationDAO();
-            int deleted = dao.cancelUserReservation(name);
-
-            if (deleted > 0) {
-                System.out.println("All your " + deleted + " reservations have been canceled.");
-            } else {
-                System.out.println("You had no reservations to cancel.");
+            System.out.print("Enter workspace ID to book: ");
+            Long wsId = Long.parseLong(scanner.nextLine());
+            WorkSpace ws = workspaceDAO.findById(wsId);
+            if (ws == null || !ws.isAvailable()) {
+                System.out.println("Workspace not available.");
+                return;
             }
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+            System.out.print("Enter booking start (yyyy-MM-dd HH:mm): ");
+            LocalDateTime start = LocalDateTime.parse(scanner.nextLine(), formatter);
+
+            System.out.print("Enter booking end (yyyy-MM-dd HH:mm): ");
+            LocalDateTime end = LocalDateTime.parse(scanner.nextLine(), formatter);
+
+            if (end.isBefore(start) || end.isEqual(start)) {
+                System.out.println("End time must be after start time.");
+                return;
+            }
+
+            List<Booking> conflicts = bookingDAO.findBookingsForWorkspace(wsId, start, end);
+            if (!conflicts.isEmpty()) {
+                System.out.println("This workspace is already booked for the selected time.");
+                return;
+            }
+
+            Booking booking = new Booking(user, ws, start, end);
+
+            bookingDAO.create(booking);
+
+            System.out.println("Booking successful! ID: " + booking.getId());
         } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            System.out.println("Error making booking: " + e.getMessage());
         }
     }
 
-    static void cancelWorkSpaceReservation(String id) {
-
-
-        try {
-            WorkspaceDAO dao = new WorkspaceDAO();
-            int deleted = dao.cancelWorkspaces(id);
-
-            if (deleted > 0) {
-                System.out.println("Reservations have been canceled.");
-            } else {
-                System.out.println("You had no reservations to cancel.");
+    static void viewMyBookings(User user) {
+        List<Booking> bookings = bookingDAO.findBookingsByUser(user.getId());
+        if (bookings.isEmpty()) {
+            System.out.println("You have no bookings.");
+        } else {
+            System.out.println("Your bookings:");
+            for (Booking b : bookings) {
+                System.out.printf("Booking ID: %d, Workspace ID: %d, Start: %s, End: %s%n",
+                        b.getId(),
+                        b.getWorkspace().getId(),
+                        b.getStartTime(),
+                        b.getEndTime());
             }
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
         }
+    }
+
+    static void cancelBooking(User user) {
+        try {
+            System.out.print("Enter booking ID to cancel: ");
+            Long bookingId = Long.parseLong(scanner.nextLine());
+
+            Booking booking = em.find(Booking.class, bookingId);
+            if (booking == null || !booking.getUser().getId().equals(user.getId())) {
+                System.out.println("Booking not found or you don't have permission to cancel it.");
+                return;
+            }
+
+            bookingDAO.delete(booking);
+
+            System.out.println("Booking canceled.");
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            System.out.println("Error canceling booking: " + e.getMessage());
+        }
+    }
+
+    static void close() {
+        if (em != null) em.close();
+        if (emf != null) emf.close();
+        scanner.close();
     }
 }
