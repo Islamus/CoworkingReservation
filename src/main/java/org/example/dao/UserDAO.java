@@ -1,62 +1,36 @@
 package org.example.dao;
 
 import org.example.entities.User;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.transaction.Transactional;
+
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+@Repository
+
+@Transactional
 
 public class UserDAO {
+    @PersistenceContext
 
-    private final EntityManager em;
+    private EntityManager em;
 
-    public UserDAO(EntityManager em) {
-        this.em = em;
-    }
 
     public void create(User user) {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            em.persist(user);
-            tx.commit();
-        } catch (RuntimeException e) {
-            if (tx.isActive()) tx.rollback();
-            throw e;
-        }
+        em.persist(user);
     }
 
     public User findById(Long id) {
         return em.find(User.class, id);
     }
 
-    public void update(User user) {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            em.merge(user);
-            tx.commit();
-        } catch (RuntimeException e) {
-            if (tx.isActive()) tx.rollback();
-            throw e;
-        }
+    public List<User> findAll() {
+        return em.createQuery("SELECT u FROM User u", User.class).getResultList();
     }
 
     public void delete(User user) {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            em.remove(em.contains(user) ? user : em.merge(user));
-            tx.commit();
-        } catch (RuntimeException e) {
-            if (tx.isActive()) tx.rollback();
-            throw e;
-        }
-    }
-
-    public User findByEmail(String email) {
-        return em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class)
-                .setParameter("email", email)
-                .getResultStream()
-                .findFirst()
-                .orElse(null);
+        em.remove(em.contains(user) ? user : em.merge(user));
     }
 }
