@@ -1,56 +1,33 @@
 package org.example.dao;
 
 import org.example.entities.WorkSpace;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.transaction.Transactional;
+
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
 
+
+
+@Repository
+
+@Transactional
+
 public class WorkSpaceDAO {
+    @PersistenceContext
 
-    private final EntityManager em;
+    private EntityManager em;
 
-    public WorkSpaceDAO(EntityManager em) {
-        this.em = em;
-    }
 
-    public void create(WorkSpace workspace) {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            em.persist(workspace);
-            tx.commit();
-        } catch (RuntimeException e) {
-            if (tx.isActive()) tx.rollback();
-            throw e;
-        }
+
+    public void create(WorkSpace ws) {
+        em.persist(ws);
     }
 
     public WorkSpace findById(Long id) {
         return em.find(WorkSpace.class, id);
-    }
-
-    public void update(WorkSpace workspace) {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            em.merge(workspace);
-            tx.commit();
-        } catch (RuntimeException e) {
-            if (tx.isActive()) tx.rollback();
-            throw e;
-        }
-    }
-
-    public void delete(WorkSpace workspace) {
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            em.remove(em.contains(workspace) ? workspace : em.merge(workspace));
-            tx.commit();
-        } catch (RuntimeException e) {
-            if (tx.isActive()) tx.rollback();
-            throw e;
-        }
     }
 
     public List<WorkSpace> findAll() {
@@ -58,7 +35,16 @@ public class WorkSpaceDAO {
     }
 
     public List<WorkSpace> findAvailable() {
-        return em.createQuery("SELECT w FROM WorkSpace w WHERE w.available = true", WorkSpace.class)
-                .getResultList();
+        return em.createQuery("SELECT w FROM WorkSpace w WHERE w.available = true", WorkSpace.class).getResultList();
     }
+
+    public void delete(WorkSpace ws) {
+        em.remove(em.contains(ws) ? ws : em.merge(ws));
+    }
+
+    public void deleteById(Long id) {
+        em.createQuery("DELETE w from WorkSpace w WHERE w.id = ?", WorkSpace.class).getResultList();
+    }
+
+
 }

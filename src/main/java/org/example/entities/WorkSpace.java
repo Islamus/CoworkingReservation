@@ -1,17 +1,16 @@
 package org.example.entities;
 
-import jakarta.persistence.*;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "workspaces")
 public class WorkSpace {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String type;  // например, "desk", "meeting_room"
+    private String type;
 
     @Column(nullable = false)
     private double price;
@@ -19,7 +18,6 @@ public class WorkSpace {
     @Column(nullable = false)
     private boolean available;
 
-    // Конструкторы
     public WorkSpace() {}
 
     public WorkSpace(String type, double price, boolean available) {
@@ -27,8 +25,6 @@ public class WorkSpace {
         this.price = price;
         this.available = available;
     }
-
-    // Геттеры и сеттеры
 
     public Long getId() {
         return id;
