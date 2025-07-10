@@ -11,7 +11,7 @@ public class WorkSpace {
     private Long id;
 
     @Column(nullable = false)
-    private String type;  // например, "desk", "meeting_room"
+    private String type;  
 
     @Column(nullable = false)
     private double price;
@@ -19,7 +19,7 @@ public class WorkSpace {
     @Column(nullable = false)
     private boolean available;
 
-    // Конструкторы
+    
     public WorkSpace() {}
 
     public WorkSpace(String type, double price, boolean available) {
@@ -28,7 +28,6 @@ public class WorkSpace {
         this.available = available;
     }
 
-    // Геттеры и сеттеры
 
     public Long getId() {
         return id;
