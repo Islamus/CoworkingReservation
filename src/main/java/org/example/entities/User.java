@@ -1,6 +1,7 @@
 package org.example.entities;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+
 
 @Entity
 @Table(name = "users")
@@ -12,8 +13,14 @@ public class User {
     @Column(nullable = false, length = 100)
     private String name;
 
+    @Column(nullable = false)
+    private String password;
+
     @Column(nullable = false, unique = true, length = 100)
     private String email;
+
+    @Column(nullable = false, unique = true, length = 100)
+    private String role;
 
 
 
@@ -43,6 +50,22 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
 }

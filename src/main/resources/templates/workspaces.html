@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Workspaces</title>
+</head>
+<body>
+<h2>Workspaces List</h2>
+<ul>
+    <li th:each="ws : ${workspaces}">
+        [[${ws.id}]] - [[${ws.type}]] - [[${ws.price}]]
+    </li>
+</ul>
+
+<h2>Add New Workspace</h2>
+<form th:action="@{/workspaces}" th:object="${workspace}" method="post">
+    <label for="type">Type:</label>
+    <input type="text" id="type" th:field="*{type}" required/>
+
+    <label for="price">Price:</label>
+    <input type="number" id="price" th:field="*{price}" step="0.01" required/>
+
+    <button type="submit">Add</button>
+</form>
+
+</body>
+</html>

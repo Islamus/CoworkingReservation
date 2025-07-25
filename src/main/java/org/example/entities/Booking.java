@@ -1,6 +1,8 @@
 package org.example.entities;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -10,32 +12,6 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workspace_id", nullable = false)
-    private WorkSpace workspace;
-
-    @Column(name = "start_time", nullable = false)
-    private LocalDateTime startTime;
-
-    @Column(name = "end_time", nullable = false)
-    private LocalDateTime endTime;
-
-    public Booking() {}
-
-    public Booking(User user, WorkSpace workspace, LocalDateTime startTime, LocalDateTime endTime) {
-        this.user = user;
-        this.workspace = workspace;
-        this.startTime = startTime;
-        this.endTime = endTime;
-    }
-
-    public Long getId() {
-        return id;
-    }
 
     public User getUser() {
         return user;
@@ -52,6 +28,41 @@ public class Booking {
     public void setWorkspace(WorkSpace workspace) {
         this.workspace = workspace;
     }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workspace_id", nullable = false)
+    private WorkSpace workspace;
+
+    @Column(name = "start_time", nullable = false)
+    private LocalDateTime startTime;
+
+    @Column(name = "end_time", nullable = false)
+    private LocalDateTime endTime;
+
+
+    public Booking() {}
+
+    public Booking(User user, WorkSpace workspace, LocalDateTime startTime, LocalDateTime endTime) {
+
+        this.user = user;
+        this.workspace = workspace;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+
+
+
+
 
     public LocalDateTime getStartTime() {
         return startTime;

@@ -1,6 +1,7 @@
 package org.example.entities;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+
 
 @Entity
 @Table(name = "workspaces")
@@ -13,10 +14,10 @@ public class WorkSpace {
     private String type;
 
     @Column(nullable = false)
-    private double price;
+    private Double price;
 
     @Column(nullable = false)
-    private boolean available;
+    private boolean available = true;
 
     public WorkSpace() {}
 
