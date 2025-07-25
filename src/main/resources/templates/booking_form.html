@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Book a Workspace</title>
+</head>
+<body>
+<h2>Book a Workspace</h2>
+
+<form th:action="@{/book}" th:object="${booking}" method="post">
+    <label>User:</label>
+    <select th:field="*{user}">
+        <option th:each="u : ${users}" th:value="${u.id}" th:text="${u.name}"></option>
+    </select>
+
+    <label>Workspace:</label>
+    <select th:field="*{workspace}">
+        <option th:each="w : ${workspaces}" th:value="${w.id}" th:text="${w.type}"></option>
+    </select>
+
+    <label>Start Time:</label>
+    <input type="datetime-local" th:field="*{startTime}" />
+
+    <label>End Time:</label>
+    <input type="datetime-local" th:field="*{endTime}" />
+
+    <button type="submit">Book</button>
+</form>
+
+
+
+</body>
+</html>
