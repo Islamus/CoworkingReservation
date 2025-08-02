@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: anderson
+      preConditions:
+        onFail: MARK_RAN
+        not:
+          - tableExists:
+              tableName: users
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+
+  - changeSet:
+      id: 2
+      author: anderson
+      preConditions:
+        onFail: MARK_RAN
+        not:
+          - tableExists:
+              tableName: workspaces
+      changes:
+        - createTable:
+            tableName: workspaces
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+
+  - changeSet:
+      id: 3
+      author: anderson
+      preConditions:
+        onFail: MARK_RAN
+        not:
+          - tableExists:
+              tableName: bookings
+      changes:
+        - createTable:
+            tableName: bookings
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
